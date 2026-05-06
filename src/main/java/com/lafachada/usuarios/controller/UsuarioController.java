@@ -2,7 +2,9 @@ package com.lafachada.usuarios.controller;
 
 import com.lafachada.usuarios.dto.LoginRequest;
 import com.lafachada.usuarios.dto.RegistroRequest;
+import com.lafachada.usuarios.dto.AuthResponse; 
 import com.lafachada.usuarios.model.Usuario;
+import com.lafachada.usuarios.security.JwtService;
 import com.lafachada.usuarios.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,7 @@ import java.util.Optional;
 public class UsuarioController {
     
     private final UsuarioService usuarioService;
+    private final JwtService jwtService; 
     
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> registrarUsuario(@RequestBody RegistroRequest request) {
@@ -33,17 +36,26 @@ public class UsuarioController {
     }
     
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequest loginRequest) {
-        Optional<Usuario> usuario = usuarioService.autenticarUsuario(
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) { 
+        Optional<Usuario> usuarioOpt = usuarioService.autenticarUsuario(
             loginRequest.getEmail(), 
             loginRequest.getPassword()
         );
         
-        if (usuario.isPresent()) {
-            return ResponseEntity.ok(Map.of(
-                "message", "Login successful",
-                "usuario", usuario.get(),
-                "token", "dummy-token-" + usuario.get().getIdUsuario()
+        if (usuarioOpt.isPresent()) {
+            Usuario usuario = usuarioOpt.get();
+            
+            String token = jwtService.generateToken(
+                usuario.getEmail(),
+                usuario.getIdUsuario(),
+                usuario.getRol().getNombre()
+            );
+            
+            // Retornamos el DTO que creamos
+            return ResponseEntity.ok(new AuthResponse(
+                "Login successful", 
+                token, 
+                usuario
             ));
         } else {
             return ResponseEntity.badRequest().body(Map.of(

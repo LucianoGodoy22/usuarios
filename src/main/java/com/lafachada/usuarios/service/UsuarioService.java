@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,30 +24,18 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UsuarioService {
 
-    @Transactional
-    public boolean eliminarUsuario(Integer id) {
-    if (usuarioRepository.existsById(id)) {
-
-        usuarioTerminoRepository.deleteByUsuarioId(id);
-        
-        usuarioRepository.deleteById(id);
-        return true;
-    }
-    return false;
-}
-
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
     private final TerminoCondicioneRepository terminoCondicioneRepository;
     private final UsuarioTerminoRepository usuarioTerminoRepository;
-    
+    private final PasswordEncoder passwordEncoder; 
+
     @Transactional 
     public Usuario registrarUsuario(RegistroRequest request) {
         
         if (usuarioRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Email ya registrado");
         }
-        
 
         Rol rol = rolRepository.findById(request.getIdRol())
                 .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
@@ -57,7 +46,8 @@ public class UsuarioService {
         Usuario usuario = new Usuario();
         usuario.setNombre(request.getNombre());
         usuario.setEmail(request.getEmail());
-        usuario.setPassword(request.getPassword());
+        
+        usuario.setPassword(passwordEncoder.encode(request.getPassword())); 
         usuario.setRol(rol);
         
         Usuario usuarioGuardado = usuarioRepository.save(usuario);
@@ -74,7 +64,7 @@ public class UsuarioService {
     
     public Optional<Usuario> autenticarUsuario(String email, String password) {
         return usuarioRepository.findByEmail(email)
-                .filter(usuario -> usuario.getPassword().equals(password));
+                .filter(usuario -> passwordEncoder.matches(password, usuario.getPassword())); 
     }
     
     public Optional<Usuario> obtenerUsuarioPorId(Integer id) {
@@ -86,11 +76,22 @@ public class UsuarioService {
                 .map(usuario -> {
                     usuario.setNombre(usuarioActualizado.getNombre());
                     usuario.setEmail(usuarioActualizado.getEmail());
-                    if (usuarioActualizado.getPassword() != null) {
-                        usuario.setPassword(usuarioActualizado.getPassword());
+                    
+                    if (usuarioActualizado.getPassword() != null && !usuarioActualizado.getPassword().isEmpty()) {
+                        usuario.setPassword(passwordEncoder.encode(usuarioActualizado.getPassword()));
                     }
                     return usuarioRepository.save(usuario);
                 });
+    }
+
+    @Transactional
+    public boolean eliminarUsuario(Integer id) {
+        if (usuarioRepository.existsById(id)) {
+            usuarioTerminoRepository.deleteByUsuarioId(id);
+            usuarioRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
     
     public List<Usuario> obtenerTodosLosUsuarios() {
