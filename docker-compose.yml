@@ -1,0 +1,45 @@
+services:
+  mariadb-db:
+    image: mariadb:latest
+    container_name: mariadb-usuarios
+    restart: always
+    environment:
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER} 
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mariadb_usuarios_data:/var/lib/mysql
+    networks:
+      - lafachada-network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh" ,"--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s 
+      retries: 5 
+
+  app-usuarios:
+    build: .
+    container_name: microservicio-usuarios
+    restart: always
+    depends_on:
+      mariadb-db:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb-db:${DB_PORT}/${DB_NAME}
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+    ports:
+      - "8083:8083"
+    networks:
+      - lafachada-network
+
+volumes:
+  mariadb_usuarios_data:
+
+networks:
+  lafachada-network:
+    external: true
