@@ -23,6 +23,7 @@ public class DataInitializer implements CommandLineRunner {
             rolAdmin.setNombre("ADMIN");
             rolRepository.save(rolAdmin);
             
+            
             Rol rolUser = new Rol();
             rolUser.setNombre("USER");
             rolRepository.save(rolUser);
