@@ -6,5 +6,6 @@ import org.springframework.stereotype.Repository;
 import com.lafachada.usuarios.model.Rol;
 
 @Repository
+
 public interface RolRepository extends JpaRepository<Rol, Integer> {
 }

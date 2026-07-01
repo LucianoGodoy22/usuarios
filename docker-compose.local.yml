@@ -1,21 +1,23 @@
+version: '3.8'
+
 services:
   mariadb-db:
     image: mariadb:latest
     container_name: mariadb-usuarios
     restart: always
     environment:
-      MARIADB_DATABASE: usuarios_db
-      MARIADB_USER: usuario_test
-      MARIADB_PASSWORD: ${DB_PASS}
-      MARIADB_ROOT_PASSWORD: ${DB_PASS}
+      - MARIADB_DATABASE=usuarios_db
+      - MARIADB_USER=usuario_test
+      - MARIADB_PASSWORD=1234
+      - MARIADB_ROOT_PASSWORD=1234
     ports:
-      - "3307:3306"
+      - "3311:3306"
     volumes:
       - mariadb_usuarios_data:/var/lib/mysql
     networks:
       - lafachada-network
     healthcheck:
-      test: ["CMD", "healthcheck.sh" ,"--connect", "--innodb_initialized"]
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s
       timeout: 5s 
       retries: 5 
@@ -28,9 +30,10 @@ services:
       mariadb-db:
         condition: service_healthy
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb-db:3306/usuarios_db
-      - SPRING_DATASOURCE_USERNAME=usuario_test
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb-usuarios:3306/usuarios_db
+      - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=1234
+      # 💡 Cambiamos la clave vieja por la variable dinámica que leerá tu .env
       - JWT_SECRET=${JWT_SECRET}
     ports:
       - "8083:8083"
