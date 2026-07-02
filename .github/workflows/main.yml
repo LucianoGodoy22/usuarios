@@ -23,7 +23,7 @@ jobs:
 
       run: mvn clean package -Dspring.profiles.active=test
       env:
-        JWT_SECRET: ${JWT_SECRET}
+        JWT_SECRET: ${{ secrets.JWT_SECRET}}
 
 
     - name: Subir JAR temporalmente como artefacto
