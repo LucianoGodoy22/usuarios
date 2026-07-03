@@ -20,11 +20,11 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         if (rolRepository.count() == 0) {
             Rol rolAdmin = new Rol();
-            rolAdmin.setNombre("ADMIN");
+            rolAdmin.setNombre("AGENTE");
             rolRepository.save(rolAdmin);
             
             Rol rolUser = new Rol();
-            rolUser.setNombre("USER");
+            rolUser.setNombre("CLIENTE");
             rolRepository.save(rolUser);
         }
         
