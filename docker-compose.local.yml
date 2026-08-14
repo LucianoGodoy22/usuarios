@@ -30,11 +30,18 @@ services:
       mariadb-db:
         condition: service_healthy
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb-usuarios:3306/usuarios_db
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=1234
-      # 💡 Cambiamos la clave vieja por la variable dinámica que leerá tu .env
+      # Conexión mapeada exactamente para tu application.properties
+      - DB_HOST=mariadb-db
+      - DB_PORT=3306
+      - DB_NAME=usuarios_db
+      - DB_USER=root
+      - DB_PASSWORD=1234
       - JWT_SECRET=${JWT_SECRET}
+      # Variables de AWS requeridas por tu aplicación
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+      - AWS_REGION=${AWS_REGION}
     ports:
       - "8083:8083"
     networks:
@@ -46,3 +53,4 @@ volumes:
 networks:
   lafachada-network:
     external: true
+
